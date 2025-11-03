@@ -14,8 +14,8 @@
 #define GREEN 0x0200   //   0 64  0
 #define RED 0xF800     // 255  0  0
 #define maxTextSize 5  //larger sourceName text
-#define startBrightness 11
-#define maxBrightness 90
+#define startBrightness 10
+#define maxBrightness 240
 // Name of the device - the 3 last bytes of the mac address will be appended to create a unique identifier for the server.
 String listenerDeviceName = "m5StickC-plus2-";
 String listenerDeviceHW = "M5StickC-Plus2";
@@ -66,7 +66,7 @@ String LastMessage = "";
 //General Variables
 bool networkConnected = false;
 int currentScreen = 0;                    //0 = Tally Screen, 1 = Settings Screen
-int currentBrightness = startBrightness;  //12 is Max level on m5stickC but 100 on m5stickC-Plus, unknown on m5stickC-Plus2
+int currentBrightness = startBrightness;  //12 is Max level on m5stickC but 100 on m5stickC-Plus, 255 on m5stickC-Plus2
 
 WiFiManager wm;  // global wm instance
 bool portalRunning = false;
@@ -98,8 +98,11 @@ void setup() {
   wm.setHostname((const char *)listenerDeviceName.c_str());
 
   m5_begin();
-  m5_setRotation(3);
+  m5_setRotation(1);
   m5_fillScreen(TFT_BLACK);
+
+  // 设置初始亮度
+  StickCP2.Display.setBrightness(currentBrightness);
 
   m5_configInitialScreen();
 
@@ -254,25 +257,6 @@ void showSettings() {
   m5_print("Battery: ");
   updateBatteryDisplay();
   lastBatteryUpdate = millis();
-  //m5_print("Battery: ");
-  //int batteryLevel = StickCP2.Power.getBatteryLevel();
-  //if (StickCP2.Power.isCharging() == 0) {
-  //  StickCP2.Display.println("Charging...");  // show when M5 is plugged in
-  //} else {
-  //  StickCP2.Display.println(String(batteryLevel) + "%");
-  //}
-
-  //m5_print("Battery: ");
-
-  // TODO: The battery voltage code is flawed
-//  int batteryLevel = floor(100.0 * ((1.01 * StickCP2.Power.getBatteryVoltage() / 1000) / 4));
-//  batteryLevel = batteryLevel > 100 ? 100 : batteryLevel;
-//  if (StickCP2.Power.getBatteryCurrent() > 0) {
-//    StickCP2.Display.println("Charging...");  // show when M5 is plugged in
-//  } else {
-//    StickCP2.Display.println(String(batteryLevel) + "%");
-//  }
-
 }
 
 void updateBatteryDisplay() {
@@ -324,6 +308,9 @@ void updateBrightness() {
   } else {
     currentBrightness = currentBrightness + 10;
   }
+
+  // 实际设置屏幕亮度
+  StickCP2.Display.setBrightness(currentBrightness);
 
   logger("Set brightness: " + String(currentBrightness), "info-quiet");
 }
@@ -752,58 +739,6 @@ void evaluateMode() {
     m5_println(LastMessage);
   }
 }
-
-//void evaluateMode() {
-//  if (actualType != prevType) {
-//    configureDisplayToEvaluateMode();
-//    actualColor.replace("#", "");
-//    String hexstring = actualColor;
-//    long number = (long)strtol(&hexstring[1], NULL, 16);
-//    int r = number >> 16;
-//    int g = number >> 8 & 0xFF;
-//    int b = number & 0xFF;
-//
-//    if (actualType != "") {
-//      m5_setTextColor(BLACK);
-//      m5_fillScreen(M5.Lcd.color565(r, g, b));
-//      m5_println(DeviceName);
-//
-//    } else {
-//      m5_setTextColor(DARKGREY, BLACK);
-//      m5_fillScreen(TFT_BLACK);
-//      m5_println(DeviceName);
-//    }
-//
-//#if TALLY_EXTRA_OUTPUT
-//    if (actualType == "\"program\"") {
-//      digitalWrite(led_program, HIGH);
-//      digitalWrite(led_preview, LOW);
-//      digitalWrite(led_aux, LOW);
-//    } else if (actualType == "\"preview\"") {
-//      digitalWrite(led_program, LOW);
-//      digitalWrite(led_preview, HIGH);
-//      digitalWrite(led_aux, LOW);
-//    } else if (actualType == "\"aux\"") {
-//      digitalWrite(led_program, LOW);
-//      digitalWrite(led_preview, LOW);
-//      digitalWrite(led_aux, HIGH);
-//    } else {
-//      digitalWrite(led_program, LOW);
-//      digitalWrite(led_preview, LOW);
-//      digitalWrite(led_aux, LOW);
-//    }
-//#endif
-//
-//    logger("Device is in " + actualType + " (color " + actualColor + " priority " + String(actualPriority) + ")", "info");
-//    Serial.println(" r: " + String(r) + " g: " + String(g) + " b: " + String(b));
-//
-//    prevType = actualType;
-//  }
-//
-//  if (LAST_MSG == true) {
-//    m5_println(LastMessage);
-//  }
-//}
 
 void checkReset() {
   // check for button press
